@@ -146,7 +146,7 @@ pub enum Path<'a> {
     },
     Map {
         parent: &'a Path<'a>,
-        key: Cow<'static, str>,
+        key: Cow<'a, str>,
     },
     Some {
         parent: &'a Path<'a>,
