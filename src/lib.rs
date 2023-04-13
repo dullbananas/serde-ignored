@@ -1046,7 +1046,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string().into());
+        *self.key = Some(if v { "true" } else { "false" }.into());
         self.delegate.visit_bool(v)
     }
 
@@ -1147,7 +1147,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_owned().into());
+        *self.key = Some(v.into());
         self.delegate.visit_borrowed_str(v)
     }
 
