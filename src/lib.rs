@@ -109,13 +109,13 @@ where
 
 /// Deserializer adapter that invokes a callback with the path to every unused
 /// field of the input.
-pub struct Deserializer<'a, 'b, D, F: 'b> {
+pub struct Deserializer<'a, D, F: 'a> {
     de: D,
-    callback: &'b mut F,
+    callback: &'a mut F,
     path: Path<'a>,
 }
 
-impl<'a, 'b, D, F> Deserializer<'a, 'b, D, F>
+impl<'a, D, F> Deserializer<'a, D, F>
 where
     F: FnMut(Path),
 {
@@ -128,7 +128,7 @@ where
     // Cargo's use of this crate.
     //
     // https://github.com/dtolnay/serde-ignored/pull/1
-    pub fn new(de: D, callback: &'b mut F) -> Self {
+    pub fn new(de: D, callback: &'a mut F) -> Self {
         Deserializer {
             de,
             callback,
@@ -185,7 +185,7 @@ impl<'a> Display for Path<'a> {
 
 /// Plain old forwarding impl except for `deserialize_ignored_any` which invokes
 /// the callback.
-impl<'a, 'b, 'de: 'a, D, F> de::Deserializer<'de> for Deserializer<'a, 'b, D, F>
+impl<'a, 'de: 'a, D, F> de::Deserializer<'de> for Deserializer<'a, D, F>
 where
     D: de::Deserializer<'de>,
     F: FnMut(Path),
@@ -457,14 +457,14 @@ where
 
 /// Wrapper that attaches context to a `Visitor`, `SeqAccess`, `EnumAccess` or
 /// `VariantAccess`.
-struct Wrap<'a, 'b, X, F: 'b> {
+struct Wrap<'a, X, F: 'a> {
     delegate: X,
-    callback: &'b mut F,
+    callback: &'a mut F,
     path: &'a Path<'a>,
 }
 
-impl<'a, 'b, X, F> Wrap<'a, 'b, X, F> {
-    fn new(delegate: X, callback: &'b mut F, path: &'a Path<'a>) -> Self {
+impl<'a, X, F> Wrap<'a, X, F> {
+    fn new(delegate: X, callback: &'a mut F, path: &'a Path<'a>) -> Self {
         Wrap {
             delegate,
             callback,
@@ -474,7 +474,7 @@ impl<'a, 'b, X, F> Wrap<'a, 'b, X, F> {
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de: 'a, X, F> Visitor<'de> for Wrap<'a, 'b, X, F>
+impl<'a, 'de: 'a, X, F> Visitor<'de> for Wrap<'a, X, F>
 where
     X: Visitor<'de>,
     F: FnMut(Path),
@@ -673,13 +673,13 @@ where
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de: 'a, X, F> de::EnumAccess<'de> for Wrap<'a, 'b, X, F>
+impl<'a, 'de: 'a, X, F> de::EnumAccess<'de> for Wrap<'a, X, F>
 where
     X: de::EnumAccess<'de> + 'a,
-    F: FnMut(Path) + 'b,
+    F: FnMut(Path) + 'a,
 {
     type Error = X::Error;
-    type Variant = Wrap<'a, 'b, X::Variant, F>;
+    type Variant = Wrap<'a, X::Variant, F>;
 
     fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self::Variant), X::Error>
     where
@@ -694,7 +694,7 @@ where
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de: 'a, X, F> de::VariantAccess<'de> for Wrap<'a, 'b, X, F>
+impl<'a, 'de: 'a, X, F> de::VariantAccess<'de> for Wrap<'a, X, F>
 where
     X: de::VariantAccess<'de>,
     F: FnMut(Path),
@@ -1284,15 +1284,15 @@ where
 }
 
 /// Seq visitor that tracks the index of its elements.
-struct SeqAccess<'a, 'b, X, F: 'b> {
+struct SeqAccess<'a, X, F: 'a> {
     delegate: X,
-    callback: &'b mut F,
+    callback: &'a mut F,
     path: &'a Path<'a>,
     index: usize,
 }
 
-impl<'a, 'b, X, F> SeqAccess<'a, 'b, X, F> {
-    fn new(delegate: X, callback: &'b mut F, path: &'a Path<'a>) -> Self {
+impl<'a, X, F> SeqAccess<'a, X, F> {
+    fn new(delegate: X, callback: &'a mut F, path: &'a Path<'a>) -> Self {
         SeqAccess {
             delegate,
             callback,
@@ -1303,7 +1303,7 @@ impl<'a, 'b, X, F> SeqAccess<'a, 'b, X, F> {
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de: 'a, X, F> de::SeqAccess<'de> for SeqAccess<'a, 'b, X, F>
+impl<'a, 'de: 'a, X, F> de::SeqAccess<'de> for SeqAccess<'a, X, F>
 where
     X: de::SeqAccess<'de>,
     F: FnMut(Path),
@@ -1330,15 +1330,15 @@ where
 
 /// Map visitor that captures the string value of its keys and uses that to
 /// track the path to its values.
-struct MapAccess<'a, 'b, X, F: 'b> {
+struct MapAccess<'a, X, F: 'a> {
     delegate: X,
-    callback: &'b mut F,
+    callback: &'a mut F,
     path: &'a Path<'a>,
     key: Option<Cow<'static, str>>,
 }
 
-impl<'a, 'b, X, F> MapAccess<'a, 'b, X, F> {
-    fn new(delegate: X, callback: &'b mut F, path: &'a Path<'a>) -> Self {
+impl<'a, X, F> MapAccess<'a, X, F> {
+    fn new(delegate: X, callback: &'a mut F, path: &'a Path<'a>) -> Self {
         MapAccess {
             delegate,
             callback,
@@ -1355,7 +1355,7 @@ impl<'a, 'b, X, F> MapAccess<'a, 'b, X, F> {
     }
 }
 
-impl<'a, 'b, 'de: 'a, X, F> de::MapAccess<'de> for MapAccess<'a, 'b, X, F>
+impl<'a, 'de: 'a, X, F> de::MapAccess<'de> for MapAccess<'a, X, F>
 where
     X: de::MapAccess<'de>,
     F: FnMut(Path),
