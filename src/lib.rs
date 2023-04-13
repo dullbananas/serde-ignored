@@ -185,7 +185,7 @@ impl<'a> Display for Path<'a> {
 
 /// Plain old forwarding impl except for `deserialize_ignored_any` which invokes
 /// the callback.
-impl<'a, 'b, 'de, D, F> de::Deserializer<'de> for Deserializer<'a, 'b, D, F>
+impl<'a, 'b, 'de: 'a, D, F> de::Deserializer<'de> for Deserializer<'a, 'b, D, F>
 where
     D: de::Deserializer<'de>,
     F: FnMut(Path),
@@ -474,7 +474,7 @@ impl<'a, 'b, X, F> Wrap<'a, 'b, X, F> {
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de, X, F> Visitor<'de> for Wrap<'a, 'b, X, F>
+impl<'a, 'b, 'de: 'a, X, F> Visitor<'de> for Wrap<'a, 'b, X, F>
 where
     X: Visitor<'de>,
     F: FnMut(Path),
@@ -673,7 +673,7 @@ where
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de, X, F> de::EnumAccess<'de> for Wrap<'a, 'b, X, F>
+impl<'a, 'b, 'de: 'a, X, F> de::EnumAccess<'de> for Wrap<'a, 'b, X, F>
 where
     X: de::EnumAccess<'de> + 'a,
     F: FnMut(Path) + 'b,
@@ -694,7 +694,7 @@ where
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de, X, F> de::VariantAccess<'de> for Wrap<'a, 'b, X, F>
+impl<'a, 'b, 'de: 'a, X, F> de::VariantAccess<'de> for Wrap<'a, 'b, X, F>
 where
     X: de::VariantAccess<'de>,
     F: FnMut(Path),
@@ -749,7 +749,7 @@ impl<'a, X> CaptureKey<'a, X> {
 }
 
 /// Forwarding impl.
-impl<'a, 'de, X> DeserializeSeed<'de> for CaptureKey<'a, X>
+impl<'a, 'de: 'a, X> DeserializeSeed<'de> for CaptureKey<'a, X>
 where
     X: DeserializeSeed<'de>,
 {
@@ -765,7 +765,7 @@ where
 }
 
 /// Forwarding impl.
-impl<'a, 'de, X> de::Deserializer<'de> for CaptureKey<'a, X>
+impl<'a, 'de: 'a, X> de::Deserializer<'de> for CaptureKey<'a, X>
 where
     X: de::Deserializer<'de>,
 {
@@ -1032,7 +1032,7 @@ where
 }
 
 /// Forwarding impl that also saves the value of integers and strings.
-impl<'a, 'de, X> Visitor<'de> for CaptureKey<'a, X>
+impl<'a, 'de: 'a, X> Visitor<'de> for CaptureKey<'a, X>
 where
     X: Visitor<'de>,
 {
@@ -1231,7 +1231,7 @@ where
     }
 }
 
-impl<'a, 'de, X> de::EnumAccess<'de> for CaptureKey<'a, X>
+impl<'a, 'de: 'a, X> de::EnumAccess<'de> for CaptureKey<'a, X>
 where
     X: de::EnumAccess<'de>,
 {
@@ -1264,7 +1264,7 @@ impl<'a, X, F> TrackedSeed<'a, X, F> {
     }
 }
 
-impl<'a, 'de, X, F> DeserializeSeed<'de> for TrackedSeed<'a, X, F>
+impl<'a, 'de: 'a, X, F> DeserializeSeed<'de> for TrackedSeed<'a, X, F>
 where
     X: DeserializeSeed<'de>,
     F: FnMut(Path),
@@ -1303,7 +1303,7 @@ impl<'a, 'b, X, F> SeqAccess<'a, 'b, X, F> {
 }
 
 /// Forwarding impl to preserve context.
-impl<'a, 'b, 'de, X, F> de::SeqAccess<'de> for SeqAccess<'a, 'b, X, F>
+impl<'a, 'b, 'de: 'a, X, F> de::SeqAccess<'de> for SeqAccess<'a, 'b, X, F>
 where
     X: de::SeqAccess<'de>,
     F: FnMut(Path),
@@ -1355,7 +1355,7 @@ impl<'a, 'b, X, F> MapAccess<'a, 'b, X, F> {
     }
 }
 
-impl<'a, 'b, 'de, X, F> de::MapAccess<'de> for MapAccess<'a, 'b, X, F>
+impl<'a, 'b, 'de: 'a, X, F> de::MapAccess<'de> for MapAccess<'a, 'b, X, F>
 where
     X: de::MapAccess<'de>,
     F: FnMut(Path),
