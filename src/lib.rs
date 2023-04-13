@@ -91,7 +91,7 @@
 
 extern crate alloc;
 
-use alloc::borrow::ToOwned;
+use alloc::borrow::{Cow, ToOwned};
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::fmt::{self, Display};
@@ -140,11 +140,23 @@ where
 /// Path to the current value in the input, like `dependencies.serde.typo1`.
 pub enum Path<'a> {
     Root,
-    Seq { parent: &'a Path<'a>, index: usize },
-    Map { parent: &'a Path<'a>, key: String },
-    Some { parent: &'a Path<'a> },
-    NewtypeStruct { parent: &'a Path<'a> },
-    NewtypeVariant { parent: &'a Path<'a> },
+    Seq {
+        parent: &'a Path<'a>,
+        index: usize,
+    },
+    Map {
+        parent: &'a Path<'a>,
+        key: Cow<'static, str>,
+    },
+    Some {
+        parent: &'a Path<'a>,
+    },
+    NewtypeStruct {
+        parent: &'a Path<'a>,
+    },
+    NewtypeVariant {
+        parent: &'a Path<'a>,
+    },
 }
 
 impl<'a> Display for Path<'a> {
@@ -727,11 +739,11 @@ where
 /// `visit_string`.
 struct CaptureKey<'a, X> {
     delegate: X,
-    key: &'a mut Option<String>,
+    key: &'a mut Option<Cow<'static, str>>,
 }
 
 impl<'a, X> CaptureKey<'a, X> {
-    fn new(delegate: X, key: &'a mut Option<String>) -> Self {
+    fn new(delegate: X, key: &'a mut Option<Cow<'static, str>>) -> Self {
         CaptureKey { delegate, key }
     }
 }
@@ -1034,7 +1046,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_bool(v)
     }
 
@@ -1042,7 +1054,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_i8(v)
     }
 
@@ -1050,7 +1062,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_i16(v)
     }
 
@@ -1058,7 +1070,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_i32(v)
     }
 
@@ -1066,7 +1078,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_i64(v)
     }
 
@@ -1074,7 +1086,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_u8(v)
     }
 
@@ -1082,7 +1094,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_u16(v)
     }
 
@@ -1090,7 +1102,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_u32(v)
     }
 
@@ -1098,7 +1110,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_string());
+        *self.key = Some(v.to_string().into());
         self.delegate.visit_u64(v)
     }
 
@@ -1127,7 +1139,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_owned());
+        *self.key = Some(v.to_owned().into());
         self.delegate.visit_str(v)
     }
 
@@ -1135,7 +1147,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.to_owned());
+        *self.key = Some(v.to_owned().into());
         self.delegate.visit_borrowed_str(v)
     }
 
@@ -1143,7 +1155,7 @@ where
     where
         E: de::Error,
     {
-        *self.key = Some(v.clone());
+        *self.key = Some(v.clone().into());
         self.delegate.visit_string(v)
     }
 
@@ -1322,7 +1334,7 @@ struct MapAccess<'a, 'b, X, F: 'b> {
     delegate: X,
     callback: &'b mut F,
     path: &'a Path<'a>,
-    key: Option<String>,
+    key: Option<Cow<'static, str>>,
 }
 
 impl<'a, 'b, X, F> MapAccess<'a, 'b, X, F> {
@@ -1335,7 +1347,7 @@ impl<'a, 'b, X, F> MapAccess<'a, 'b, X, F> {
         }
     }
 
-    fn key<E>(&mut self) -> Result<String, E>
+    fn key<E>(&mut self) -> Result<Cow<'static, str>, E>
     where
         E: de::Error,
     {
